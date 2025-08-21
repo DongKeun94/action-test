@@ -1,4 +1,5 @@
-name: Deploy to SPC with OIDC (Shell Script)
+name: Deploy to SPC
+
 on:
   push:
     branches:
@@ -9,49 +10,18 @@ permissions:
   contents: read
 
 jobs:
-  deploy-to-spc:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Configure SPC Credentials
-        id: spc_credentials
+      - name: SPC OIDC Login
+        uses: DongKeun94/spc-oidc
+        with:
+          role_arn: ${{ secrets.SPC_ROLE_ARN }}
+          sts_endpoint: https://sts.samsungspc.com
+
+      - name: Upload file to SPC S3
         run: |
-          ROLE_ARN="${{ secrets.SPC_ROLE_ARN }}"
-          STS_ENDPOINT="https://sts.samsungspc.com"
-
-          ID_TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.samsungspc.com" | jq -r '.value')
-
-          if [ -z "$ID_TOKEN" ] || [ "$ID_TOKEN" == "null" ]; then
-            echo "Error: OIDC token could not be fetched." >&2
-            exit 1
-          fi
-
-          echo "===== OIDC Token Claims ====="
-          echo "$ID_TOKEN" | cut -d "." -f2 | base64 -d | jq .
-          echo "============================="
-
-          RESPONSE=$(aws sts assume-role-with-web-identity \
-            --role-arn "${ROLE_ARN}" \
-            --role-session-name "GitHubActionsSession" \
-            --web-identity-token "${ID_TOKEN}" \
-            --endpoint-url "${STS_ENDPOINT}" \
-            --output json)
-
-          ACCESS_KEY=$(echo $RESPONSE | jq -r '.Credentials.AccessKeyId')
-          SECRET_KEY=$(echo $RESPONSE | jq -r '.Credentials.SecretAccessKey')
-          SESSION_TOKEN=$(echo $RESPONSE | jq -r '.Credentials.SessionToken')
-
-          echo "AWS_ACCESS_KEY_ID=$ACCESS_KEY" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=$SECRET_KEY" >> $GITHUB_ENV
-          echo "AWS_SESSION_TOKEN=$SESSION_TOKEN" >> $GITHUB_ENV
-
-      - name: Copy files to SPC S3
-        run: |
-          export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
-          export AWS_REQUEST_CHECKSUM_CALCULATION=when_required
-          
           aws s3 cp text.txt s3://dsung-dx-test-2/oidcTest/ \
             --endpoint-url https://s3.us-east-1.samsungspc.com --region us-east-1
