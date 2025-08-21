@@ -16,6 +16,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Make deploy script executable
+        run: chmod +x oidc.sh
+
       - name: SPC OIDC Login
         run: ./oidc.sh "${{ secrets.SPC_ROLE_ARN }}" "https://sts.samsungspc.com"
 
