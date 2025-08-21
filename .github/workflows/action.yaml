@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: SPC OIDC Login
-        run: ./spc-oidc-login.sh "${{ secrets.SPC_ROLE_ARN }}" "https://sts.samsungspc.com"
+        run: ./oidc.sh "${{ secrets.SPC_ROLE_ARN }}" "https://sts.samsungspc.com"
 
       - name: Upload file to SPC S3
         run: |
