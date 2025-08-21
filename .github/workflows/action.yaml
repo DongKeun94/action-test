@@ -52,5 +52,5 @@ jobs:
 
       - name: Copy files to SPC S3
         run: |
-          aws s3 cp text.txt s3://dsung-dx-test-2/oidcTest/ \
-            --endpoint-url https://s3.samsungspc.com --region us-east-1
+          aws s3 ls --endpoint-url https://s3.samsungspc.com
+          
