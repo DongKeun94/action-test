@@ -13,15 +13,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1️⃣ 레포 체크아웃
       - uses: actions/checkout@v3
 
+      # 2️⃣ SPC OIDC 로그인
       - name: SPC OIDC Login
-        uses: DongKeun94/spc-oidc
+        uses: DongKeun94/spc-oidc@master
         with:
           role_arn: ${{ secrets.SPC_ROLE_ARN }}
           sts_endpoint: https://sts.samsungspc.com
 
-      - name: Upload file to SPC S3
+      # 3️⃣ SPC S3 업로드
+      - name: Upload TXT files to SPC S3
         run: |
-          aws s3 cp text.txt s3://dsung-dx-test-2/oidcTest/ \
-            --endpoint-url https://s3.us-east-1.samsungspc.com --region us-east-1
+          export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
+          export AWS_REQUEST_CHECKSUM_CALCULATION=when_required
+          
+          aws s3 cp *.txt s3://dsung-dx-test-2/oidcTest/ \
+            --endpoint-url https://s3.us-east-1.samsungspc.com \
+            --region us-east-1
