@@ -52,5 +52,8 @@ jobs:
 
       - name: Copy files to SPC S3
         run: |
+          export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
+          export AWS_REQUEST_CHECKSUM_CALCULATION=when_required
+          
           aws s3 cp text.txt s3://dsung-dx-test-2/oidcTest/ \
             --endpoint-url https://s3.us-east-1.samsungspc.com --region us-east-1
