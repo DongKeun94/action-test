@@ -1,0 +1,45 @@
+name: Deploy to SPC with OIDC (Shell Script)
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-to-spc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure SPC Credentials
+        id: spc_credentials
+        run: |
+          
+          STS_ENDPOINT="${{ secrets.SPC_STS_ENDPOINT }}"
+          ROLE_ARN="${{ secrets.SPC_ROLE_ARN }}"
+          ID_TOKEN="${{ github.event.payload.id_token }}"
+          
+          RESPONSE=$(aws sts assume-role-with-web-identity \
+            --role-arn "${ROLE_ARN}" \
+            --role-session-name "GitHubActionsSession" \
+            --web-identity-token "${ID_TOKEN}" \
+            --endpoint-url "${STS_ENDPOINT}" \
+            --output json)
+
+          ACCESS_KEY=$(echo $RESPONSE | jq -r '.Credentials.AccessKeyId')
+          SECRET_KEY=$(echo $RESPONSE | jq -r '.Credentials.SecretAccessKey')
+          SESSION_TOKEN=$(echo $RESPONSE | jq -r '.Credentials.SessionToken')
+
+          # 획득한 자격 증명을 환경 변수에 설정
+          echo "AWS_ACCESS_KEY_ID=$ACCESS_KEY" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$SECRET_KEY" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$SESSION_TOKEN" >> $GITHUB_ENV
+
+      - name: Copy files to SPC S3
+        run: |
+          aws s3 cp text.txt s3://dsung-dx-test-2/oidcTest/ \
+            --endpoint-url https://s3.samsungspc.com --region us-east-1
