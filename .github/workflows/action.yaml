@@ -5,7 +5,7 @@ on:
       - master
 
 permissions:
-  id-token: write
+  id-token: write   # OIDC 토큰 발급 권한
   contents: read
 
 jobs:
@@ -18,19 +18,18 @@ jobs:
       - name: Configure SPC Credentials
         id: spc_credentials
         run: |
-          
-          STS_ENDPOINT="${{ secrets.SPC_STS_ENDPOINT }}"
           ROLE_ARN="${{ secrets.SPC_ROLE_ARN }}"
+          STS_ENDPOINT="https://sts.samsungspc.com"
 
-          ID_TOKEN=$(curl -s -X POST -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" \
-             -H "Accept: application/json" \
-             "${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}" | jq -r .value)
+          # OIDC 토큰 요청 (audience = SPC STS 엔드포인트)
+          ID_TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$STS_ENDPOINT" | jq -r '.value')
 
-          if [ -z "$ID_TOKEN" ]; then
+          if [ -z "$ID_TOKEN" ] || [ "$ID_TOKEN" == "null" ]; then
             echo "Error: OIDC token could not be fetched." >&2
             exit 1
           fi
-          
+
           RESPONSE=$(aws sts assume-role-with-web-identity \
             --role-arn "${ROLE_ARN}" \
             --role-session-name "GitHubActionsSession" \
