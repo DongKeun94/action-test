@@ -12,6 +12,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
