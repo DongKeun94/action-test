@@ -21,7 +21,15 @@ jobs:
           
           STS_ENDPOINT="${{ secrets.SPC_STS_ENDPOINT }}"
           ROLE_ARN="${{ secrets.SPC_ROLE_ARN }}"
-          ID_TOKEN="${{ github.event.payload.id_token }}"
+
+          ID_TOKEN=$(curl -s -X POST -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" \
+             -H "Accept: application/json" \
+             "${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}" | jq -r .value)
+
+          if [ -z "$ID_TOKEN" ]; then
+            echo "Error: OIDC token could not be fetched." >&2
+            exit 1
+          fi
           
           RESPONSE=$(aws sts assume-role-with-web-identity \
             --role-arn "${ROLE_ARN}" \
@@ -34,7 +42,6 @@ jobs:
           SECRET_KEY=$(echo $RESPONSE | jq -r '.Credentials.SecretAccessKey')
           SESSION_TOKEN=$(echo $RESPONSE | jq -r '.Credentials.SessionToken')
 
-          # 획득한 자격 증명을 환경 변수에 설정
           echo "AWS_ACCESS_KEY_ID=$ACCESS_KEY" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=$SECRET_KEY" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$SESSION_TOKEN" >> $GITHUB_ENV
