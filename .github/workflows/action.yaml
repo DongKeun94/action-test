@@ -20,6 +20,8 @@ jobs:
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
       AWS_ENDPOINT_URL_ECR: "https://ecr.us-east-1.samsungspc.com"
       SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
 
     steps:
       - name: Checkout repository
