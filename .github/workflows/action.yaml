@@ -26,7 +26,7 @@ jobs:
           SPC_REGIONAL_DOMAIN="us-east-1.samsungspc.com"
           SPC_STS_GLOBAL_DOMAIN="sts.samsungspc.com"
           SPC_STS_AUDIENCE="https://sts.samsungspc.com"
-          AWS_ENDPOINT_URL_STS="https://sts.${{ SPC_REGIONAL_DOMAIN }}"
+          AWS_ENDPOINT_URL_STS="https://sts.us-east-1.samsungspc.com"
 
       - name: Configure SPC credential
         id: config_spc_creds
