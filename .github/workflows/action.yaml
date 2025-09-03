@@ -19,7 +19,7 @@ jobs:
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
       
       # ⭐ 핵심: ECR 컨트롤 플레인 API 엔드포인트를 SPC로 변경
-      AWS_ENDPOINT_URL_ECR: "https://api.ecr.us-east-1.samsungspc.com"  # 기존: ecr.us-east-1.samsungspc.com
+      AWS_ENDPOINT_URL_ECR: "https://apigw.us-east-1.samsungspc.com"  # 기존: ecr.us-east-1.samsungspc.com
       
       # ECR 데이터 플레인 (Docker Registry) 엔드포인트
       SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
