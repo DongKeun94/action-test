@@ -1,50 +1,99 @@
-name: '[Debug] Test ECR Login with AWS CLI'
 
+name: 'Deploy to SPC with ECR Action'
 on:
   push:
     branches:
       - master
-
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  test-cli-login:
+  build-and-push:
     runs-on: ubuntu-latest
     env:
+      # SPC 환경 설정
       AWS_REGION: "us-east-1"
       AWS_ROLE_ARN: ${{ secrets.SPC_ROLE_ARN }}
       SPC_AUDIENCE: "sts.samsungspc.com"
+      
+      # SPC 커스텀 엔드포인트 설정
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
       AWS_ENDPOINT_URL_ECR: "https://ecr.us-east-1.samsungspc.com"
+      
+      # SPC ECR 레지스트리 정보
       SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
-      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-
+      IMAGE_REPO: "dsung-test"
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Configure SPC credential
-        id: config_spc_creds
+        
+      - name: Get commit metadata
+        id: vars
+        run: |
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "build_date=$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+      
+      - name: Configure SPC credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: 'Test Login to SPC ECR using AWS CLI'
+      
+      - name: Verify SPC AWS configuration
         run: |
-          echo "test Attempting login with direct AWS CLI command..."
+          echo "=== SPC AWS Configuration ==="
+          echo "AWS Region: $AWS_REGION"
+          echo "STS Endpoint: $AWS_ENDPOINT_URL_STS"
+          echo "ECR Endpoint: $AWS_ENDPOINT_URL_ECR"
+          echo "ECR Registry: $SPC_ECR_REGISTRY"
           
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-            docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
-            
-          echo "Docker login command finished. Check logs for 'Login Succeeded' message."
+          echo "=== Testing STS ==="
+          aws sts get-caller-identity
+          
+          echo "=== AWS CLI Version ==="
+          aws --version
 
-      - name: Build and Push a test image
-        if: success()
+      - name: Login to SPC ECR using ECR Action
+        id: login-ecr-action
+        uses: aws-actions/amazon-ecr-login@v2
+        continue-on-error: true  
+        with:
+          mask-password: false
+      
+      - name: Check ECR Action Result
         run: |
-          docker build -t ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest .
-          docker push ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest
+          if [ "${{ steps.login-ecr-action.outcome }}" == "success" ]; then
+            echo "✅ ECR Action 성공!"
+            echo "Registry from action: ${{ steps.login-ecr-action.outputs.registry }}"
+            echo "Expected registry: $SPC_ECR_REGISTRY"
+            
+            # 출력된 레지스트리가 SPC 레지스트리와 일치하는지 확인
+            if [ "${{ steps.login-ecr-action.outputs.registry }}" == "$SPC_ECR_REGISTRY" ]; then
+              echo "🎯 Registry 일치! ECR Action이 SPC에서 정상 동작합니다."
+              echo "ecr_action_success=true" >> $GITHUB_ENV
+            else
+              echo "⚠️  Registry 불일치. ECR Action이 표준 AWS를 사용하고 있습니다."
+              echo "ecr_action_success=false" >> $GITHUB_ENV
+            fi
+          else
+            echo "❌ ECR Action 실패. CLI 방식을 사용합니다."
+            echo "ecr_action_success=false" >> $GITHUB_ENV
+          fi
+
+      # - name: 'Test Login to SPC ECR using AWS CLI'
+      #   run: |
+      #     echo "test Attempting login with direct AWS CLI command..."
+          
+      #     aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+      #       docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
+            
+      #     echo "Docker login command finished. Check logs for 'Login Succeeded' message."
+
+      # - name: Build and Push a test image
+      #   if: success()
+      #   run: |
+      #     docker build -t ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest .
+      #     docker push ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest
