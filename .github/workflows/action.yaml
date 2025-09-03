@@ -1,5 +1,4 @@
-
-name: 'Deploy to SPC with ECR Action'
+name: 'Deploy to SPC with Correct ECR Endpoints'
 on:
   push:
     branches:
@@ -12,16 +11,17 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     env:
-      # SPC 환경 설정
       AWS_REGION: "us-east-1"
       AWS_ROLE_ARN: ${{ secrets.SPC_ROLE_ARN }}
       SPC_AUDIENCE: "sts.samsungspc.com"
       
-      # SPC 커스텀 엔드포인트 설정
+      # SPC 엔드포인트 설정
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
-      AWS_ENDPOINT_URL_ECR: "https://ecr.us-east-1.samsungspc.com"
       
-      # SPC ECR 레지스트리 정보
+      # ⭐ 핵심: ECR 컨트롤 플레인 API 엔드포인트를 SPC로 변경
+      AWS_ENDPOINT_URL_ECR: "https://api.ecr.us-east-1.samsungspc.com"  # 기존: ecr.us-east-1.samsungspc.com
+      
+      # ECR 데이터 플레인 (Docker Registry) 엔드포인트
       SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
       IMAGE_REPO: "dsung-test"
     
@@ -42,45 +42,61 @@ jobs:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
       
-      - name: Verify SPC AWS configuration
+      - name: Debug SPC endpoints
         run: |
-          echo "=== SPC AWS Configuration ==="
-          echo "AWS Region: $AWS_REGION"
+          echo "=== SPC ECR 엔드포인트 확인 ==="
           echo "STS Endpoint: $AWS_ENDPOINT_URL_STS"
-          echo "ECR Endpoint: $AWS_ENDPOINT_URL_ECR"
+          echo "ECR API Endpoint: $AWS_ENDPOINT_URL_ECR"
           echo "ECR Registry: $SPC_ECR_REGISTRY"
+          echo "=========================="
           
-          echo "=== Testing STS ==="
+          # STS 연결 테스트
+          echo "Testing STS connection..."
           aws sts get-caller-identity
+      
+      - name: Test ECR API connectivity
+        run: |
+          echo "🔍 Testing ECR GetAuthorizationToken API..."
           
-          echo "=== AWS CLI Version ==="
-          aws --version
-
-      - name: Login to SPC ECR using ECR Action
-        id: login-ecr-action
+          # ECR API 연결 테스트 (토큰 가져오기만)
+          if aws ecr get-login-password --region ${{ env.AWS_REGION }} > /dev/null; then
+            echo "✅ ECR API 연결 성공! (컨트롤 플레인)"
+          else
+            echo "❌ ECR API 연결 실패"
+            exit 1
+          fi
+      
+      - name: Login to SPC ECR
+        run: |
+          echo "🔑 Logging into SPC ECR..."
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
+          echo "✅ SPC ECR login successful!"
+      
+      - name: Test ECR Action with SPC endpoints
+        id: test-ecr-action
         uses: aws-actions/amazon-ecr-login@v2
-        continue-on-error: true  
+        continue-on-error: true
         with:
           mask-password: false
       
-      - name: Check ECR Action Result
+      - name: Check ECR Action result
         run: |
-          if [ "${{ steps.login-ecr-action.outcome }}" == "success" ]; then
-            echo "✅ ECR Action 성공!"
-            echo "Registry from action: ${{ steps.login-ecr-action.outputs.registry }}"
-            echo "Expected registry: $SPC_ECR_REGISTRY"
+          if [ "${{ steps.test-ecr-action.outcome }}" == "success" ]; then
+            echo "🎉 ECR Action이 SPC에서 성공했습니다!"
+            echo "Registry: ${{ steps.test-ecr-action.outputs.registry }}"
+            echo "Expected: $SPC_ECR_REGISTRY"
             
-            # 출력된 레지스트리가 SPC 레지스트리와 일치하는지 확인
-            if [ "${{ steps.login-ecr-action.outputs.registry }}" == "$SPC_ECR_REGISTRY" ]; then
-              echo "🎯 Registry 일치! ECR Action이 SPC에서 정상 동작합니다."
-              echo "ecr_action_success=true" >> $GITHUB_ENV
+            if [ "${{ steps.test-ecr-action.outputs.registry }}" == "$SPC_ECR_REGISTRY" ]; then
+              echo "✅ 완벽! ECR Action이 SPC 엔드포인트를 사용하고 있습니다."
+              echo "use_ecr_action=true" >> $GITHUB_ENV
             else
-              echo "⚠️  Registry 불일치. ECR Action이 표준 AWS를 사용하고 있습니다."
-              echo "ecr_action_success=false" >> $GITHUB_ENV
+              echo "⚠️ ECR Action이 다른 레지스트리를 반환했습니다."
+              echo "use_ecr_action=false" >> $GITHUB_ENV
             fi
           else
-            echo "❌ ECR Action 실패. CLI 방식을 사용합니다."
-            echo "ecr_action_success=false" >> $GITHUB_ENV
+            echo "❌ ECR Action 여전히 실패. CLI 방식 사용."
+            echo "use_ecr_action=false" >> $GITHUB_ENV
           fi
 
       # - name: 'Test Login to SPC ECR using AWS CLI'
