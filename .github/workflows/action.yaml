@@ -40,19 +40,7 @@ jobs:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: "us-east-1"
-          aws-endpoint-url-sts: ${{ env.AWS_ENDPOINT_URL_STS }}
 
       - name: Login to SPC ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registries: ${{ env.SPC_ECR_REGISTRY }}
-
-      - name: Build and push Docker image to SPC ECR
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ${{ env.IMAGE_REPO }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
