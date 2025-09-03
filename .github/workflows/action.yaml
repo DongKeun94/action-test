@@ -34,26 +34,20 @@ jobs:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-      
-      - name: Upload TXT files to SPC S3
-        run: |
-          aws s3 cp *.txt s3://dsung-dx-test-2/oidcTest/ \
-            --endpoint-url https://s3.us-east-1.samsungspc.com\
-            --region us-east-1
 
-      # - name: 'Test Login to SPC ECR using AWS CLI'
-      #   run: |
-      #     echo "Attempting login with direct AWS CLI command..."
+      - name: 'Test Login to SPC ECR using AWS CLI'
+        run: |
+          echo "test Attempting login with direct AWS CLI command..."
           
-      #     # 매뉴얼에 나온 CLI 명령어를 그대로 실행합니다.
-      #     # 1. aws ecr get-login-password: ECR에서 임시 암호를 받아옵니다.
-      #     # 2. | (파이프): 받아온 암호를 다음 명령어의 입력으로 전달합니다.
-      #     # 3. docker login: AWS를 사용자 이름으로, 표준 입력(--password-stdin)으로 들어온 암호를 사용해 로그인합니다.
+          # 매뉴얼에 나온 CLI 명령어를 그대로 실행합니다.
+          # 1. aws ecr get-login-password: ECR에서 임시 암호를 받아옵니다.
+          # 2. | (파이프): 받아온 암호를 다음 명령어의 입력으로 전달합니다.
+          # 3. docker login: AWS를 사용자 이름으로, 표준 입력(--password-stdin)으로 들어온 암호를 사용해 로그인합니다.
           
-      #     aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-      #       docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
             
-      #     echo "Docker login command finished. Check logs for 'Login Succeeded' message."
+          echo "Docker login command finished. Check logs for 'Login Succeeded' message."
 
       # 만약 위 로그인이 성공했다면, 아래 스텝으로 실제 Docker 이미지 푸시도 테스트해볼 수 있습니다.
       # - name: Build and Push a test image
