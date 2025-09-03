@@ -27,8 +27,10 @@ jobs:
           echo "SPC_REGIONAL_DOMAIN=us-east-1.samsungspc.com" >> $GITHUB_ENV
           echo "SPC_AUDIENCE=sts.samsungspc.com" >> $GITHUB_ENV
           echo "AWS_ENDPOINT_URL_STS=https://sts.samsungspc.com" >> $GITHUB_ENV
-          # Set the SPC ECR registry URL
+          # Set the SPC ECR registry URL for the docker login command
           echo "SPC_ECR_REGISTRY=137260306892.dkr.ecr.us-east-1.samsungspc.com" >> $GITHUB_ENV
+          # Add the specific ECR API endpoint URL for the AWS SDK
+          echo "AWS_ENDPOINT_URL_ECR=https://ecr.us-east-1.samsungspc.com" >> $GITHUB_ENV
           echo "IMAGE_REPO=dsung-test" >> $GITHUB_ENV
 
       - name: Configure SPC credential
@@ -52,8 +54,5 @@ jobs:
           REPOSITORY: ${{ env.IMAGE_REPO }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build the Docker image
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-
-          # Push the image to the SPC registry
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
