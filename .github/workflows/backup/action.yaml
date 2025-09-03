@@ -27,9 +27,6 @@ jobs:
           echo "SPC_REGIONAL_DOMAIN=us-east-1.samsungspc.com" >> $GITHUB_ENV
           echo "SPC_AUDIENCE=sts.samsungspc.com" >> $GITHUB_ENV
           echo "AWS_ENDPOINT_URL_STS=https://sts.samsungspc.com" >> $GITHUB_ENV
-          # Set the SPC ECR registry URL
-          echo "SPC_ECR_REGISTRY=137260306892.dkr.ecr.us-east-1.samsungspc.com" >> $GITHUB_ENV
-          echo "IMAGE_REPO=dsung-test" >> $GITHUB_ENV
 
       - name: Configure SPC credential
         id: config_spc_creds
@@ -38,22 +35,9 @@ jobs:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: "us-east-1"
-          aws-endpoint-url-sts: ${{ env.AWS_ENDPOINT_URL_STS }}
 
-      - name: Login to SPC ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registries: ${{ env.SPC_ECR_REGISTRY }}
-
-      - name: Build and push Docker image to SPC ECR
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: ${{ env.IMAGE_REPO }}
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Upload TXT files to SPC S3
         run: |
-          # Build the Docker image
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-
-          # Push the image to the SPC registry
-          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          aws s3 cp *.txt s3://dsung-dx-test-2/oidcTest/ \
+            --endpoint-url https://s3.${{env.SPC_REGIONAL_DOMAIN}} \
+            --region us-east-1
