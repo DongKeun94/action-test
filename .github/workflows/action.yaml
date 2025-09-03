@@ -33,7 +33,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           audience: ${{  env.SPC_STS_AUDIENCE }}
-          role-to-assume: ${{  AWS_ROLE_ARN  }}
+          role-to-assume: ${{  env.AWS_ROLE_ARN  }}
           aws-region: "us-east-1"
 
       - name: Upload TXT files to SPC S3
