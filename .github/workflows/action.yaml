@@ -1,7 +1,9 @@
 name: '[Debug] Test ECR Login with AWS CLI'
 
 on:
-  workflow_dispatch: # 수동으로 직접 실행할 수 있도록 설정
+  push:
+    branches:
+      - master
 
 permissions:
   id-token: write
