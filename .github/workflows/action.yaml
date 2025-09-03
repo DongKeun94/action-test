@@ -19,15 +19,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: SPC OIDC Login
-        uses: DongKeun94/spc-oidc@master
+      - name: Set env
+        id: set_env_vars
+        run: |
+          AWS_ROLE_ARN= ${{ secrets.SPC_ROLE_ARN }}
+          SPC_REGIONAL_DOMAIN="us-east-1.samsungspc.com"
+          SPC_STS_GLOBAL_DOMAIN="sts.samsungspc.com"
+          SPC_STS_AUDIENCE="https://sts.samsungspc.com"
+          AWS_ENDPOINT_URL_STS="https://sts.${{ SPC_REGIONAL_DOMAIN }}"
+
+      - name: Configure SPC credential
+        id: config_spc_creds
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role_arn: ${{ secrets.SPC_ROLE_ARN }}
-          sts_endpoint: https://sts.samsungspc.com
+          audience: ${{  env.SPC_STS_AUDIENCE }}
+          role-to-assume: ${{  AWS_ROLE_ARN  }}
+          aws-region: "us-east-1"
 
       - name: Upload TXT files to SPC S3
         run: |
           
           aws s3 cp *.txt s3://dsung-dx-test-2/oidcTest/ \
-            --endpoint-url https://s3.us-east-1.samsungspc.com \
+            --endpoint-url https://s3.${{env.SPC_REGIONAL_DOMAIN}} \
             --region us-east-1
