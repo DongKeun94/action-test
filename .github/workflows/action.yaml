@@ -42,9 +42,9 @@ jobs:
             docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
             
           echo "Docker login command finished. Check logs for 'Login Succeeded' message."
-          
+
       - name: Build and Push a test image
         if: success()
         run: |
-          docker build -t ${{ env.SPC_ECR_REGISTRY }}/my-test-app:latest .
-          docker push ${{ env.SPC_ECR_REGISTRY }}/my-test-app:latest
+          docker build -t ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest .
+          docker push ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest
