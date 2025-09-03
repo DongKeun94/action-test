@@ -22,23 +22,22 @@ jobs:
       - name: Set env
         id: set_env_vars
         run: |
-          AWS_ROLE_ARN= ${{ secrets.SPC_ROLE_ARN }}
-          SPC_REGIONAL_DOMAIN="us-east-1.samsungspc.com"
-          SPC_STS_GLOBAL_DOMAIN="sts.samsungspc.com"
-          SPC_STS_AUDIENCE="https://sts.samsungspc.com"
-          AWS_ENDPOINT_URL_STS="https://sts.us-east-1.samsungspc.com"
+          echo "AWS_ROLE_ARN=${{ secrets.SPC_ROLE_ARN }}" >> $GITHUB_ENV
+          echo "SPC_REGIONAL_DOMAIN=us-east-1.samsungspc.com" >> $GITHUB_ENV
+          echo "SPC_STS_GLOBAL_DOMAIN=sts.samsungspc.com" >> $GITHUB_ENV
+          echo "SPC_STS_AUDIENCE=https://sts.samsungspc.com" >> $GITHUB_ENV
+          echo "AWS_ENDPOINT_URL_STS=https://sts.us-east-1.samsungspc.com" >> $GITHUB_ENV
 
       - name: Configure SPC credential
         id: config_spc_creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          audience: ${{  env.SPC_STS_AUDIENCE }}
-          role-to-assume: ${{  env.AWS_ROLE_ARN  }}
+          audience: ${{ env.SPC_STS_AUDIENCE }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: "us-east-1"
 
       - name: Upload TXT files to SPC S3
         run: |
-          
           aws s3 cp *.txt s3://dsung-dx-test-2/oidcTest/ \
             --endpoint-url https://s3.${{env.SPC_REGIONAL_DOMAIN}} \
             --region us-east-1
