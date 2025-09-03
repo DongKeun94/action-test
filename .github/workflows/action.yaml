@@ -19,6 +19,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      
+      - name: Debug Print AWS Environment Variables
+        run: |
+          echo "Checking for pre-existing AWS environment variables..."
+          env | grep AWS_ || echo "No AWS variables found."
 
       - name: Set env
         id: set_env_vars
