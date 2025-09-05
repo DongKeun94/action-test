@@ -14,14 +14,9 @@ jobs:
       AWS_REGION: "us-east-1"
       AWS_ROLE_ARN: ${{ secrets.SPC_ROLE_ARN }}
       SPC_AUDIENCE: "sts.samsungspc.com"
-      
-      # SPC 엔드포인트 설정
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
-      
-      # ⭐ 핵심: ECR 컨트롤 플레인 API 엔드포인트를 SPC로 변경
-      AWS_ENDPOINT_URL_ECR: "https://apigw.us-east-1.samsungspc.com"  # 기존: ecr.us-east-1.samsungspc.com
-      
-      # ECR 데이터 플레인 (Docker Registry) 엔드포인트
+      #AWS_ENDPOINT_URL_ECR: "https://apigw.us-east-1.samsungspc.com"
+      AWS_ENDPOINT_URL_ECR: "https://137260306892.dkr.ecr.us-east-1.samsungspc.com"
       SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
       IMAGE_REPO: "dsung-test"
     
@@ -73,12 +68,12 @@ jobs:
             docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
           echo "✅ SPC ECR login successful!"
       
-      - name: Test ECR Action with SPC endpoints
-        id: test-ecr-action
-        uses: aws-actions/amazon-ecr-login@v2
-        continue-on-error: true
-        with:
-          mask-password: false
+      # - name: Test ECR Action with SPC endpoints
+      #   id: test-ecr-action
+      #   uses: aws-actions/amazon-ecr-login@v2
+      #   continue-on-error: true
+      #   with:
+      #     mask-password: false
       
       - name: Check ECR Action result
         run: |
@@ -99,14 +94,6 @@ jobs:
             echo "use_ecr_action=false" >> $GITHUB_ENV
           fi
 
-      # - name: 'Test Login to SPC ECR using AWS CLI'
-      #   run: |
-      #     echo "test Attempting login with direct AWS CLI command..."
-          
-      #     aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-      #       docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
-            
-      #     echo "Docker login command finished. Check logs for 'Login Succeeded' message."
 
       # - name: Build and Push a test image
       #   if: success()
