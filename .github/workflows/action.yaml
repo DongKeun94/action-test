@@ -15,8 +15,7 @@ jobs:
       AWS_ROLE_ARN: ${{ secrets.SPC_ROLE_ARN }}
       SPC_AUDIENCE: "sts.samsungspc.com"
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
-      #AWS_ENDPOINT_URL_ECR: "https://apigw.us-east-1.samsungspc.com"
-      AWS_ENDPOINT_URL_ECR: "https://137260306892.dkr.ecr.us-east-1.samsungspc.com"
+      AWS_ENDPOINT_URL_ECR: "https://ecr.us-east-1.samsungspc.com"
       SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
       IMAGE_REPO: "dsung-test"
     
@@ -61,19 +60,19 @@ jobs:
             exit 1
           fi
       
-      - name: Login to SPC ECR
-        run: |
-          echo "🔑 Logging into SPC ECR..."
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-            docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
-          echo "✅ SPC ECR login successful!"
+      # - name: Login to SPC ECR
+      #   run: |
+      #     echo "🔑 Logging into SPC ECR..."
+      #     aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+      #       docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
+      #     echo "✅ SPC ECR login successful!"
       
-      # - name: Test ECR Action with SPC endpoints
-      #   id: test-ecr-action
-      #   uses: aws-actions/amazon-ecr-login@v2
-      #   continue-on-error: true
-      #   with:
-      #     mask-password: false
+      - name: Test ECR Action with SPC endpoints
+        id: test-ecr-action
+        uses: aws-actions/amazon-ecr-login@v2
+        continue-on-error: true
+        with:
+          mask-password: false
       
       - name: Check ECR Action result
         run: |
