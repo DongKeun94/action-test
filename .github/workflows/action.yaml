@@ -31,7 +31,7 @@ jobs:
         with:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }
+          aws-region: ${{ env.AWS_REGION }}
       
       
      
