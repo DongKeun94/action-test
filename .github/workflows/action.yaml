@@ -14,10 +14,6 @@ jobs:
       AWS_REGION: "us-east-1"
       AWS_ROLE_ARN: ${{ secrets.SPC_ROLE_ARN }}
       SPC_AUDIENCE: "sts.samsungspc.com"
-      AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
-      AWS_ENDPOINT_URL_ECR: "https://ecr.us-east-1.samsungspc.com"
-      SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
-      IMAGE_REPO: "dsung-test"
     
 
     steps:
@@ -35,64 +31,7 @@ jobs:
         with:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Check ECR API Endpoint with AWS CLI
-        id: check-ecr-endpoint
-        run: |
-          echo "::group::Attempting to get ECR auth token with AWS CLI --debug"
-          aws ecr get-authorization-token --region ${{ env.AWS_REGION }} --debug
-          echo "::endgroup::"
+          aws-region: ${{ env.AWS_REGION }
       
       
-      # - name: Test ECR Action with SPC endpoints
-      #   id: test-ecr-action
-      #   uses: aws-actions/amazon-ecr-login@v2
-
-      
-      # - name: Test ECR API connectivity
-      #   run: |
-      #     echo "🔍 Testing ECR GetAuthorizationToken API..."
-          
-      #     # ECR API 연결 테스트 (토큰 가져오기만)
-      #     if aws ecr get-login-password --region ${{ env.AWS_REGION }} > /dev/null; then
-      #       echo "✅ ECR API 연결 성공! (컨트롤 플레인)"
-      #     else
-      #       echo "❌ ECR API 연결 실패"
-      #       exit 1
-      #     fi
-      
-      # - name: Login to SPC ECR
-      #   run: |
-      #     echo "🔑 Logging into SPC ECR..."
-      #     aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-      #       docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
-      #     echo "✅ SPC ECR login successful!"
-      
-
-      
-      # - name: Check ECR Action result
-      #   run: |
-      #     if [ "${{ steps.test-ecr-action.outcome }}" == "success" ]; then
-      #       echo "🎉 ECR Action이 SPC에서 성공했습니다!"
-      #       echo "Registry: ${{ steps.test-ecr-action.outputs.registry }}"
-      #       echo "Expected: $SPC_ECR_REGISTRY"
-            
-      #       if [ "${{ steps.test-ecr-action.outputs.registry }}" == "$SPC_ECR_REGISTRY" ]; then
-      #         echo "✅ 완벽! ECR Action이 SPC 엔드포인트를 사용하고 있습니다."
-      #         echo "use_ecr_action=true" >> $GITHUB_ENV
-      #       else
-      #         echo "⚠️ ECR Action이 다른 레지스트리를 반환했습니다."
-      #         echo "use_ecr_action=false" >> $GITHUB_ENV
-      #       fi
-      #     else
-      #       echo "❌ ECR Action 여전히 실패. CLI 방식 사용."
-      #       echo "use_ecr_action=false" >> $GITHUB_ENV
-      #     fi
-
-
-      # - name: Build and Push a test image
-      #   if: success()
-      #   run: |
-      #     docker build -t ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest .
-      #     docker push ${{ env.SPC_ECR_REGISTRY }}/dsung-test:latest
+     
