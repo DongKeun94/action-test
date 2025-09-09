@@ -16,7 +16,7 @@ jobs:
       SPC_AUDIENCE: "sts.samsungspc.com"
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
       AWS_STS_REGIONAL_ENDPOINTS: regional
-      AWS_ENDPOINT_URL: "https://ecr.us-east-1.samsungspc.com"
+      AWS_ENDPOINT_URL_ECR: "https://ecr.us-east-1.samsungspc.com"
       SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
       IMAGE_REPO: "dsung-test"
     
@@ -36,6 +36,7 @@ jobs:
       - name: Test ECR Action with SPC endpoints
         id: test-ecr-action
         uses: aws-actions/amazon-ecr-login@v2
+        
       
       
      
