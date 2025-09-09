@@ -15,17 +15,16 @@ jobs:
       AWS_ROLE_ARN: ${{ secrets.SPC_ROLE_ARN }}
       SPC_AUDIENCE: "sts.samsungspc.com"
       AWS_ENDPOINT_URL_STS: "https://sts.samsungspc.com"
+      AWS_STS_REGIONAL_ENDPOINTS: regional
+      AWS_ENDPOINT_URL: "https://ecr.us-east-1.samsungspc.com"
+      SPC_ECR_REGISTRY: "137260306892.dkr.ecr.us-east-1.samsungspc.com"
+      IMAGE_REPO: "dsung-test"
     
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Get commit metadata
-        id: vars
-        run: |
-          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "build_date=$(date -u +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
       
       - name: Configure SPC credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -33,6 +32,10 @@ jobs:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Test ECR Action with SPC endpoints
+        id: test-ecr-action
+        uses: aws-actions/amazon-ecr-login@v2
       
       
      
