@@ -35,10 +35,8 @@ jobs:
       
       - name: Test ECR Action with SPC endpoints
         id: test-ecr-action
-        uses: aws-actions/amazon-ecr-login@v2
-        env:
-          AWS_ENDPOINT_URL_ECR: ${{ env.AWS_ENDPOINT_URL_ECR }}
-          AWS_ENDPOINT_URL_STS: ${{ env.AWS_ENDPOINT_URL_STS }}
+        uses: aws-actions/amazon-ecr-login@v4
+
         
       
       
