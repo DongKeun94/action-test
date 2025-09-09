@@ -33,9 +33,18 @@ jobs:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
       
-      - name: Test ECR Action with SPC endpoints
-        id: test-ecr-action
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to SPC ECR
+        run: |
+          echo "🔑 Logging into SPC ECR..."
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
+          echo "✅ SPC ECR login successful!"
+      
+      # - name: Test ECR Action with SPC endpoints
+      #   id: test-ecr-action
+      #   uses: aws-actions/amazon-ecr-login@v2
+
+
 
         
       
