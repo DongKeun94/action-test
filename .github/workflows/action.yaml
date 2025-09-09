@@ -36,30 +36,31 @@ jobs:
           audience: ${{ env.SPC_AUDIENCE }}
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-      
-      - name: Debug SPC endpoints
+
+      - name: Check ECR API Endpoint with AWS CLI
+        id: check-ecr-endpoint
         run: |
-          echo "=== SPC ECR 엔드포인트 확인 ==="
-          echo "STS Endpoint: $AWS_ENDPOINT_URL_STS"
-          echo "ECR API Endpoint: $AWS_ENDPOINT_URL_ECR"
-          echo "ECR Registry: $SPC_ECR_REGISTRY"
-          echo "=========================="
-          
-          # STS 연결 테스트
-          echo "Testing STS connection..."
-          aws sts get-caller-identity
+          echo "::group::Attempting to get ECR auth token with AWS CLI --debug"
+          aws ecr get-authorization-token --region ${{ env.AWS_REGION }} --debug
+          echo "::endgroup::"
       
-      - name: Test ECR API connectivity
-        run: |
-          echo "🔍 Testing ECR GetAuthorizationToken API..."
+      
+      # - name: Test ECR Action with SPC endpoints
+      #   id: test-ecr-action
+      #   uses: aws-actions/amazon-ecr-login@v2
+
+      
+      # - name: Test ECR API connectivity
+      #   run: |
+      #     echo "🔍 Testing ECR GetAuthorizationToken API..."
           
-          # ECR API 연결 테스트 (토큰 가져오기만)
-          if aws ecr get-login-password --region ${{ env.AWS_REGION }} > /dev/null; then
-            echo "✅ ECR API 연결 성공! (컨트롤 플레인)"
-          else
-            echo "❌ ECR API 연결 실패"
-            exit 1
-          fi
+      #     # ECR API 연결 테스트 (토큰 가져오기만)
+      #     if aws ecr get-login-password --region ${{ env.AWS_REGION }} > /dev/null; then
+      #       echo "✅ ECR API 연결 성공! (컨트롤 플레인)"
+      #     else
+      #       echo "❌ ECR API 연결 실패"
+      #       exit 1
+      #     fi
       
       # - name: Login to SPC ECR
       #   run: |
@@ -68,12 +69,7 @@ jobs:
       #       docker login --username AWS --password-stdin ${{ env.SPC_ECR_REGISTRY }}
       #     echo "✅ SPC ECR login successful!"
       
-      # - name: Test ECR Action with SPC endpoints
-      #   id: test-ecr-action
-      #   uses: aws-actions/amazon-ecr-login@v2
-      #   continue-on-error: true
-      #   with:
-      #     mask-password: false
+
       
       # - name: Check ECR Action result
       #   run: |
